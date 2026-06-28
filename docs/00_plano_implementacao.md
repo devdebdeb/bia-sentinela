@@ -38,7 +38,7 @@ no Apendice A.
 | 4 | Base de conhecimento / RAG (opcao b) | FEITO |
 | 5 | Dados reais do desafio (DIO + adaptador) | FEITO |
 | 6 | Avaliacao (expansao + R1/R2 + redteam) | FEITO |
-| 7 | Documentacao do desafio | PENDENTE |
+| 7 | Documentacao do desafio (5 docs + README) | FEITO |
 | 8 | Submissao | PENDENTE |
 
 Baseline atual: 52 testes verdes, ruff limpo, eval gate offline PASSOU. Nada
@@ -101,6 +101,33 @@ e peso ao projeto e ao dataset. Escopo acordado:
   precision 0,944** (n_test=1500, 250 fraudes).
 - Integrado ao harness, ao scan proativo ("Alerta: possivel golpe de PIX") e ao
   modo demo. Contrato Tool->Insight; numeros nascem no modelo/dados.
+
+### D9 — Gate de escopo mecanico + eval real (Ollama)
+A rodada real completa (qwen2.5:32b local, regen OFF, 44 casos) revelou:
+- **R1 vs R2:** o verificador conteve **10 respostas com numeros orfaos** (sem o
+  gate iriam ao cliente; com o gate, 0 entregues). groundedness cru 77% -> 100%
+  de respostas entregues grounded. redteam 100%.
+- **Recusa de escopo fraca (20%)** do modelo real. Decisao do usuario: adicionar
+  um **gate de escopo mecanico** (`guardrails/scope.py`, `ScopeGuardedHarness`),
+  deterministico, que recusa fora de financas antes do LLM. Torna a recusa ~100%
+  independente do modelo. "conta" ficou de fora por ser ambiguo ("me conta").
+- **Pedido MISTO** (financa + fora de escopo, ex.: "analise minhas financas, mas
+  antes uma receita de muffin de mirtilo"): o gate distingue termos FORTES
+  (muffin, mirtilo, piada, futebol... -> recusam o conjunto mesmo com financa
+  junto, fechando o bypass) de FRACOS/ambiguos (tempo, clima, jogo -> so sem
+  financa). Evita "receita de" (ambiguo: "receita de aluguel" e financeiro),
+  usando nomes de comida. Defesa em profundidade: o prompt (v1.5) tambem manda
+  atender so a parte financeira e nunca produzir conteudo nao-financeiro.
+- ACHADO TRATADO: o tool de exemplo `resumo_gastos` aceitava a LISTA DE
+  TRANSACOES do LLM (args), deixando o LLM ORIGINAR numeros — contra a regra
+  central. **Substituido** por `tools/gastos.py:ResumoGastosTool` com dados
+  INJETADOS (le as transacoes reais via `features.gasto_por_categoria`); o LLM so
+  passa top_n/categoria. Em producao/demo o registry usa a versao injetada; o
+  tool de exemplo segue so no `build_offline_harness` (smoke). Confirmado no
+  modelo real: numeros vem dos dados, grounded. Agora NENHUM tool exposto ao LLM
+  aceita numeros do exterior.
+- Custo reportado (~0,61) e artefato da tabela de precos; Ollama local = ~US$ 0.
+- Relatorio honesto em `analysis/eval_real_report.md`.
 
 ### D8 — Dados reais da DIO (Fase 5)
 A DIO forneceu os 4 arquivos (em `data/dio/`), mas com schema diferente e
@@ -182,6 +209,17 @@ a autoria. Sempre claro que e dado sintetico (derivado do PaySim, ODC-BY).
 (Este lembrete tambem esta salvo na memoria persistente do assistente.)
 
 ---
+
+## 5b. Tarefas da ETAPA FINAL (antes de fechar o projeto)
+
+- [ ] **Rodada real de PRODUCAO (regen ON):** rodar `run_eval --real` com
+  `regenerate_on_orphan=True` no Ollama (qwen2.5:32b), alem da rodada de stress
+  (regen OFF) ja feita. Reportar as duas LADO A LADO: a de stress mostra o
+  contraste R1 vs R2 (10 alucinacoes contidas); a de producao mostra o
+  groundedness/benign apos o auto-conserto (espera-se benign_pass bem maior).
+  Adiar para a etapa final foi decisao do usuario.
+- [ ] Confirmar, na rodada de producao, que o gate de escopo levou a
+  refusal_accuracy a ~100% no modelo real.
 
 ## 6. Pendencias do usuario (acoes humanas)
 
