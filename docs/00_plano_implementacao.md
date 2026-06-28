@@ -39,7 +39,7 @@ no Apendice A.
 | 5 | Dados reais do desafio (DIO + adaptador) | FEITO |
 | 6 | Avaliacao (expansao + R1/R2 + redteam) | FEITO |
 | 7 | Documentacao do desafio (5 docs + README) | FEITO |
-| 8 | Submissao | PENDENTE |
+| 8 | Submissao (prep local FEITO; push/entrega = usuario) | FEITO* |
 
 Baseline atual: 52 testes verdes, ruff limpo, eval gate offline PASSOU. Nada
 commitado ainda (ver decisao D1).
