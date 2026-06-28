@@ -25,6 +25,7 @@ from ..data.ingestion import (
     carregar_transacoes,
 )
 from ..guardrails.policy import PolicyGate, PromessasProibidasRule, SuitabilityRule
+from ..guardrails.scope import ScopeGuardedHarness
 from ..prompts import SYSTEM_PROMPT
 from ..tools.build import build_registry
 
@@ -120,7 +121,7 @@ def build_production_harness(
     catalogo = [(p.produto_id, p.nome) for p in produtos]
     policy = PolicyGate(rules=[PromessasProibidasRule(), SuitabilityRule(catalogo)])
 
-    return AgentHarness(
+    harness = AgentHarness(
         llm,
         registry,
         system_prompt=SYSTEM_PROMPT,
@@ -132,3 +133,5 @@ def build_production_harness(
         allow_user_numbers=s.allow_numbers_from_user,
         policy=policy,
     )
+    # Gate de escopo mecanico: recusa fora de financas antes do LLM.
+    return ScopeGuardedHarness(harness)
