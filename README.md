@@ -24,10 +24,16 @@ promessa do modelo:
 
 ## Demonstracao
 
-> _Espaco para print/gif da interface (abertura proativa + chat)._
->
-> `docs/img/` — adicione aqui o screenshot/gif e referencie-o:
-> `![BIA Sentinela](docs/img/demo.gif)`
+Abertura proativa — a BIA varre os dados e antecipa gastos atipicos, caixa
+parado, golpe de PIX e produtos adequados ao perfil. Todo numero vem de uma
+ferramenta deterministica.
+
+![Abertura proativa da BIA Sentinela](docs/img/demo.png)
+
+Chat — cada resposta traz o selo de transparencia (ferramentas usadas e resultado
+da verificacao de proveniencia):
+
+![Chat grounded com selo de verificacao](docs/img/demo_chat.png)
 
 ## Capacidades
 
