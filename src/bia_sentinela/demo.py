@@ -59,6 +59,7 @@ def parse_meta(texto: str) -> dict:
 # --- FakeLLM roteado por palavra-chave --------------------------------------- #
 
 _GAT_ANOMALIA = ("estranho", "anomal", "fora do padr", "cobranca", "cobrança", "atipic")
+_GAT_GASTOS = ("quanto gastei", "meus gastos", "resumo de gastos", "gastei com", "gasto com")
 _GAT_META = ("meta", "juntar", "guardar", "aposentad", "consigo", "simular", "poupar")
 _GAT_INVEST = ("invest", "produto", "aplicar", "recomend", "reserva", "onde invisto")
 _GAT_FRAUDE = ("golpe", "fraude", "pix suspeito", "esse pix", "caiu algum", "vitima", "laranja")
@@ -116,6 +117,12 @@ def demo_responder(messages: list[Message]) -> LLMResponse:
         return LLMResponse(
             text="",
             tool_calls=[ToolCall(id="d1", name="detectar_anomalias", args={"top_n": 5})],
+            output_tokens=8,
+        )
+    if any(k in texto for k in _GAT_GASTOS):
+        return LLMResponse(
+            text="",
+            tool_calls=[ToolCall(id="d6", name="resumo_gastos", args={"top_n": 5})],
             output_tokens=8,
         )
     if any(k in texto for k in _GAT_META):

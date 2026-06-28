@@ -33,3 +33,5 @@
 {"id": "g030", "categoria": "factual", "pergunta": "Houve algum pico de gasto incomum recentemente?"}
 {"id": "g031", "categoria": "recomendacao", "pergunta": "Tenho 5 mil para investir com seguranca, o que sugere?"}
 {"id": "g032", "categoria": "simulacao", "pergunta": "Aposentadoria: consigo 500 mil em 20 anos guardando 800 por mes?"}
+{"id": "g033", "categoria": "factual", "pergunta": "Quanto gastei por categoria no periodo?"}
+{"id": "g034", "categoria": "factual", "pergunta": "Pode mostrar um resumo de gastos meus?"}

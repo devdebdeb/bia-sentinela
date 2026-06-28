@@ -21,8 +21,8 @@ from ..schemas import PerfilInvestidor, ProdutoFinanceiro
 from .anomalias import DetectarAnomaliasTool
 from .base import ToolRegistry
 from .conhecimento import ConsultarGlossarioTool, ConsultarProdutoTool
-from .example import ResumoGastosTool
 from .fraude import build_fraude_tool
+from .gastos import ResumoGastosTool
 from .metas import SimularMetaTool
 from .suitability import SuitabilidadeTool
 
@@ -38,7 +38,7 @@ def build_registry(
 ) -> ToolRegistry:
     """Registra as ferramentas reais com os dados ja carregados injetados."""
     registry = ToolRegistry()
-    registry.register(ResumoGastosTool())
+    registry.register(ResumoGastosTool(transacoes))  # dados injetados, nao via LLM
     registry.register(DetectarAnomaliasTool(transacoes, seed=seed))
     registry.register(SuitabilidadeTool(perfil, produtos))
     registry.register(SimularMetaTool(seed=seed))
