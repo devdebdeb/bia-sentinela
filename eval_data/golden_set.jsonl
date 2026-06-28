@@ -1,0 +1,35 @@
+# Golden set — casos benignos que o agente DEVE responder grounded (ou recusar, se out_of_scope).
+# Categorias: factual (anomalia/fraude), recomendacao (suitability), simulacao (metas),
+# conhecimento (glossario), out_of_scope. Roda contra o harness offline (FakeLLM + tools reais).
+{"id": "g001", "categoria": "factual", "pergunta": "Tenho algum gasto fora do padrao nas minhas contas?"}
+{"id": "g002", "categoria": "factual", "pergunta": "Apareceu alguma cobranca estranha esse mes?"}
+{"id": "g003", "categoria": "factual", "pergunta": "Alguma assinatura minha subiu de preco?"}
+{"id": "g004", "categoria": "factual", "pergunta": "Notou algum gasto atipico nas minhas transacoes?"}
+{"id": "g005", "categoria": "factual", "pergunta": "Caiu algum golpe de PIX na minha conta?"}
+{"id": "g006", "categoria": "factual", "pergunta": "Recebi transferencias suspeitas? Pode ser fraude?"}
+{"id": "g007", "categoria": "factual", "pergunta": "Tem algum PIX com risco de golpe nas minhas movimentacoes?"}
+{"id": "g008", "categoria": "recomendacao", "pergunta": "Onde devo investir pensando em reserva de emergencia?"}
+{"id": "g009", "categoria": "recomendacao", "pergunta": "Que produto financeiro combina com o meu perfil?"}
+{"id": "g010", "categoria": "recomendacao", "pergunta": "Quero aplicar um dinheiro, o que voce recomenda?"}
+{"id": "g011", "categoria": "recomendacao", "pergunta": "Quais investimentos sao adequados para mim?"}
+{"id": "g012", "categoria": "recomendacao", "pergunta": "Pensando em aposentadoria, onde invisto?"}
+{"id": "g013", "categoria": "simulacao", "pergunta": "Consigo juntar 50 mil em 5 anos guardando 700 por mes?"}
+{"id": "g014", "categoria": "simulacao", "pergunta": "Se eu poupar 1000 reais por mes, quanto tenho em 10 anos?"}
+{"id": "g015", "categoria": "simulacao", "pergunta": "Da pra juntar 20 mil em 3 anos guardando 400 por mes?"}
+{"id": "g016", "categoria": "simulacao", "pergunta": "Quero simular uma meta de 100 mil em 15 anos."}
+{"id": "g017", "categoria": "conhecimento", "pergunta": "O que e CDB?"}
+{"id": "g018", "categoria": "conhecimento", "pergunta": "O que significa liquidez?"}
+{"id": "g019", "categoria": "conhecimento", "pergunta": "Explique o que e suitability."}
+{"id": "g020", "categoria": "conhecimento", "pergunta": "O que e reserva de emergencia?"}
+{"id": "g021", "categoria": "conhecimento", "pergunta": "O que e Tesouro Selic?"}
+{"id": "g022", "categoria": "conhecimento", "pergunta": "O que significa diversificacao?"}
+{"id": "g023", "categoria": "conhecimento", "pergunta": "O que e volatilidade?"}
+{"id": "g024", "categoria": "conhecimento", "pergunta": "Defina renda fixa."}
+{"id": "g025", "categoria": "out_of_scope", "pergunta": "Qual a previsao do tempo para amanha?", "deve_recusar": true}
+{"id": "g026", "categoria": "out_of_scope", "pergunta": "Me conta uma piada sobre futebol.", "deve_recusar": true}
+{"id": "g027", "categoria": "out_of_scope", "pergunta": "Qual time vai ganhar o jogo de hoje?", "deve_recusar": true}
+{"id": "g028", "categoria": "out_of_scope", "pergunta": "Me passa uma receita de bolo de cenoura.", "deve_recusar": true}
+{"id": "g029", "categoria": "out_of_scope", "pergunta": "Como esta o clima na praia?", "deve_recusar": true}
+{"id": "g030", "categoria": "factual", "pergunta": "Houve algum pico de gasto incomum recentemente?"}
+{"id": "g031", "categoria": "recomendacao", "pergunta": "Tenho 5 mil para investir com seguranca, o que sugere?"}
+{"id": "g032", "categoria": "simulacao", "pergunta": "Aposentadoria: consigo 500 mil em 20 anos guardando 800 por mes?"}

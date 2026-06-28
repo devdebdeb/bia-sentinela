@@ -1,0 +1,45 @@
+{
+  "anomalias_plantadas": [
+    {
+      "tipo": "debito",
+      "data": "2025-09-10",
+      "descricao": "Streaming Premium (assinatura)",
+      "categoria": "assinaturas",
+      "valor": -89.9,
+      "is_anomaly": true
+    },
+    {
+      "tipo": "debito",
+      "data": "2025-10-10",
+      "descricao": "Streaming Premium (assinatura)",
+      "categoria": "assinaturas",
+      "valor": -89.9,
+      "is_anomaly": true
+    },
+    {
+      "tipo": "debito",
+      "data": "2025-11-10",
+      "descricao": "Streaming Premium (assinatura)",
+      "categoria": "assinaturas",
+      "valor": -89.9,
+      "is_anomaly": true
+    },
+    {
+      "tipo": "debito",
+      "data": "2025-12-10",
+      "descricao": "Streaming Premium (assinatura)",
+      "categoria": "assinaturas",
+      "valor": -89.9,
+      "is_anomaly": true
+    },
+    {
+      "tipo": "debito",
+      "data": "2025-12-21",
+      "descricao": "Lazer - compra atipica",
+      "categoria": "lazer",
+      "valor": -2200.0,
+      "is_anomaly": true
+    }
+  ],
+  "n_meses": 12
+}

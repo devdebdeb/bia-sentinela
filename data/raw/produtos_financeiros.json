@@ -1,0 +1,56 @@
+[
+  {
+    "produto_id": "p_cdb_liq",
+    "nome": "CDB Liquidez Diaria",
+    "classe": "renda_fixa",
+    "risco": "conservador",
+    "rentabilidade_aa": 10.5,
+    "liquidez": "diaria",
+    "aplicacao_minima": 100.0
+  },
+  {
+    "produto_id": "p_tesouro_selic",
+    "nome": "Tesouro Selic 2029",
+    "classe": "renda_fixa",
+    "risco": "conservador",
+    "rentabilidade_aa": 10.9,
+    "liquidez": "D+1",
+    "aplicacao_minima": 100.0
+  },
+  {
+    "produto_id": "p_cdb_pre",
+    "nome": "CDB Prefixado 2027",
+    "classe": "renda_fixa",
+    "risco": "moderado",
+    "rentabilidade_aa": 12.2,
+    "liquidez": "no_vencimento",
+    "aplicacao_minima": 500.0
+  },
+  {
+    "produto_id": "p_multimercado",
+    "nome": "Fundo Multimercado",
+    "classe": "multimercado",
+    "risco": "moderado",
+    "rentabilidade_aa": 13.5,
+    "liquidez": "D+30",
+    "aplicacao_minima": 500.0
+  },
+  {
+    "produto_id": "p_acoes",
+    "nome": "Fundo de Acoes",
+    "classe": "renda_variavel",
+    "risco": "arrojado",
+    "rentabilidade_aa": 18.0,
+    "liquidez": "D+30",
+    "aplicacao_minima": 100.0
+  },
+  {
+    "produto_id": "p_cripto",
+    "nome": "Fundo Cripto",
+    "classe": "renda_variavel",
+    "risco": "arrojado",
+    "rentabilidade_aa": 25.0,
+    "liquidez": "D+5",
+    "aplicacao_minima": 100.0
+  }
+]

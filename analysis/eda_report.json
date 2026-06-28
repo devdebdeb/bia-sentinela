@@ -1,0 +1,53 @@
+{
+  "qualidade": {
+    "n_registros": 264,
+    "periodo": {
+      "inicio": "2025-01-04",
+      "fim": "2025-12-27",
+      "meses_distintos": 12
+    },
+    "nulos_por_coluna": {
+      "data": 0,
+      "descricao": 0,
+      "categoria": 0,
+      "valor": 0,
+      "tipo": 0,
+      "mes": 0
+    },
+    "pct_nulos_valor": 0.0,
+    "categorias_distintas": 9,
+    "valor": {
+      "min": -2200.0,
+      "max": 9000.0,
+      "media_saidas": -239.2
+    }
+  },
+  "taxa_poupanca_media": 0.4419,
+  "mes_maior_desvio": {
+    "mes": "2025-12",
+    "desvio_vs_media_movel": 0.276
+  },
+  "top_categoria": {
+    "categoria": "moradia",
+    "share": 0.3579
+  },
+  "assinatura_recorrente": {
+    "descricao": "Streaming Premium (assinatura)",
+    "meses": 12,
+    "nivel_inicial": 39.9,
+    "nivel_atual": 89.9,
+    "variacao_pct": 125.3
+  },
+  "caixa_ocioso": {
+    "saldo_conta": 38000.0,
+    "gasto_medio_mensal": 5023.11,
+    "reserva_recomendada": 30138.65,
+    "caixa_ocioso": 7861.35
+  },
+  "figuras": [
+    "01_fluxo_caixa.png",
+    "02_gastos_categoria.png",
+    "03_assinatura_anomalia.png",
+    "04_caixa_ocioso.png"
+  ]
+}

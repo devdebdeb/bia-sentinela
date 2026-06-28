@@ -1,0 +1,15 @@
+data,canal,assunto,resolvido
+2024-12-10,chat,app instavel,True
+2024-12-31,telefone,duvida fatura,False
+2025-01-13,chat,investimentos,False
+2025-01-31,telefone,limite cartao,False
+2025-05-06,app,contestacao compra,True
+2025-05-07,app,limite cartao,True
+2025-06-02,chat,investimentos,False
+2025-06-15,chat,contestacao compra,True
+2025-06-17,chat,contestacao compra,False
+2025-07-02,app,investimentos,True
+2025-08-24,chat,app instavel,False
+2025-09-24,app,app instavel,False
+2025-10-09,telefone,limite cartao,True
+2025-11-25,telefone,limite cartao,True

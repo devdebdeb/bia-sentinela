@@ -1,0 +1,12 @@
+{
+  "cliente_id": "cli_0001",
+  "perfil_risco": "moderado",
+  "renda_mensal": 9000.0,
+  "objetivos": [
+    "reserva de emergencia",
+    "aposentadoria",
+    "viagem"
+  ],
+  "horizonte_meses": 120,
+  "saldo_conta": 38000.0
+}

@@ -1,0 +1,18 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  quality-and-eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # ml: o eval e varios tools (anomalia, fraude) usam scikit-learn.
+      - run: pip install -e ".[dev,ml]"
+      - name: Lint
+        run: ruff check src tests
+      - name: Unit tests
+        run: pytest -q
+      - name: Eval gate (offline)
+        run: python -m bia_sentinela.eval.run_eval --golden eval_data/golden_set.jsonl --redteam eval_data/redteam_set.jsonl
