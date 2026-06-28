@@ -18,6 +18,12 @@ ml = ["scikit-learn>=1.3"]
 ui = ["streamlit>=1.30"]
 dev = ["pytest>=7.4", "ruff>=0.4"]
 
+[tool.setuptools.packages.find]
+# Layout misto: o pacote principal vive em src/, e `config` na raiz (importado
+# como `config.settings`). Inclui ambos no editable install.
+where = ["src", "."]
+include = ["bia_sentinela*", "config*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
 testpaths = ["tests"]
