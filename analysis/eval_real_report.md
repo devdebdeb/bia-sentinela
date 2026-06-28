@@ -1,66 +1,65 @@
 # Avaliacao com MODELO REAL — qwen2.5:32b (Ollama local)
 
-Numeros de uma execucao com modelo real, reportados **a parte do gate offline**.
-Nao confundir com o gate de CI (que usa FakeLLM e valida o mecanismo, nao a
-qualidade do modelo).
+Numeros de execucoes com modelo real, reportados **a parte do gate offline**. O
+gate de CI usa FakeLLM e valida o MECANISMO; aqui medimos a QUALIDADE do modelo e
+o mecanismo agindo sobre ela.
 
 ## Ambiente
 
-- Modelo: `qwen2.5:32b` via Ollama local (GPU RTX 5090, 24 GB).
-- Provedor: cliente compativel com OpenAI (`OpenAICompatLLM`), `temperature=0`.
-- Data: 2026-06-28. Dataset: sintetico (default), 44 casos (32 golden + 12 redteam).
-- **Regeneracao DESLIGADA de proposito** (`regenerate_on_orphan=False`) para
-  EXPOR e medir as alucinacoes numericas (contraste R1 vs R2). Em producao a
-  regeneracao fica ligada e recupera boa parte desses casos.
+- Modelo: `qwen2.5:32b` via Ollama local (GPU RTX 5090, 24 GB; ~12-13 tok/s).
+- Cliente compativel com OpenAI, `temperature=0`. Data: 2026-06-28.
+- Dataset sintetico (default). Custo reportado e ARTEFATO da tabela de precos; o
+  Ollama local e gratuito (custo real ~US$ 0).
 
-## Resultados (rotulados: MODELO REAL)
+## Duas rodadas
 
-| Metrica | Valor | Leitura |
+- **Stress (regeneracao OFF):** expoe e mede as alucinacoes numericas — contraste
+  R1 vs R2. (44 casos; rodada anterior a inclusao de 2 casos de gastos no golden.)
+- **Producao (regeneracao ON):** comportamento real entregue ao usuario, com
+  auto-conserto. (46 casos; ja com o gate de escopo mecanico.)
+
+| Metrica | Stress (regen OFF) | Producao (regen ON) |
 |---|---|---|
-| casos | 44 | 32 golden + 12 redteam |
-| groundedness_rate | 77,27% | groundedness CRU do modelo (R1) |
-| refusal_accuracy | 20,00% | recusa de out_of_scope (fraqueza do modelo) |
-| redteam_block_rate | 100,00% | 12/12 vetores contidos |
-| benign_pass_rate | 62,96% | benignos respondidos grounded (com regen OFF) |
-| hallucinations_caught | 10 | respostas com numero orfao contidas pelo gate |
-| p95_latency_ms | ~39.700 | 32b local |
-| tool_error | 1 | o modelo gerou args de ferramenta invalidos 1x |
+| casos | 44 | 46 |
+| groundedness (cru) | 77,27% | 80,43% |
+| refusal_accuracy | 20,00%* | **100,00%** |
+| redteam_block_rate | 100,00% | 100,00% |
+| benign_pass_rate | 62,96% | 65,52% |
+| orfaos detectados | 10 | 11 |
+| contidos pelo gate | 10 (bloqueados) | 9 bloqueados + ~2 reescritos |
 
-> Observacao sobre custo: o `total_cost_usd` reportado pelo runner (~0,61) e um
-> ARTEFATO da tabela de precos configurada (precos da Anthropic). O Ollama local
-> e gratuito: o custo monetario real desta rodada foi ~US$ 0.
+> *A rodada de stress precede o gate de escopo. A rodada de producao ja o inclui
+> e CONFIRMA, no modelo real, refusal de ~100% — o gate e deterministico (recusa
+> antes do LLM), entao independe da qualidade do modelo.
 
-## Interpretacao — R1 vs R2 (o valor do guardrail)
+## Leituras honestas
 
-- **10 respostas** do modelo real continham numeros sem proveniencia.
-- **Sem o verificador (R1):** esses 10 numeros alucinados teriam sido exibidos
-  ao cliente como se fossem fatos.
-- **Com o verificador (R2):** nenhuma chegou ao usuario. Toda resposta entregue
-  e grounded por construcao.
+**1. Containment e total (a tese se sustenta).** Em ambas as rodadas, TODA
+resposta com numero sem proveniencia foi contida (bloqueada ou reescrita). Nenhum
+numero alucinado chegou ao usuario. O groundedness das respostas ENTREGUES e 100%
+(as bloqueadas nao sao entregues). Esse e o ponto central do projeto.
 
-Ou seja: o groundedness "cru" do modelo (77%) sobe para **100% de respostas
-entregues grounded** apos o gate — o mecanismo fez exatamente o que promete.
+**2. R1 vs R2 (valor do guardrail).** Sem o verificador (R1), as ~10 respostas
+com numeros orfaos do modelo real teriam sido exibidas como fatos. Com ele (R2),
+zero foram. groundedness cru ~77-80% -> 100% de respostas entregues grounded.
 
-## Achados honestos (qualidade do modelo, nao do mecanismo)
+**3. Regeneracao e best-effort, nao garantia.** Com regen ON, o qwen2.5:32b
+recuperou apenas ~2 de 11 casos: reapresentar os fatos nem sempre faz um modelo
+fraco reproduzir os numeros exatamente (arredonda, troca datas/contagens). A
+camada CONFIAVEL e o bloqueio; a regeneracao apenas melhora a UX quando da certo.
 
-1. **Recusa de escopo fraca (20%) NESTA rodada.** O `qwen2.5:32b` frequentemente
-   respondeu perguntas fora de escopo (clima, piada, receita) em vez de recusar.
-   **Correcao aplicada DEPOIS desta rodada:** foi adicionado um **gate de escopo
-   mecanico** (`guardrails/scope.py`), deterministico, que recusa fora de
-   financas ANTES do LLM. Com ele, a `refusal_accuracy` passa a ser ~100%
-   independentemente do modelo (recusa os 5 casos out_of_scope por construcao);
-   as demais metricas nao mudam (mesmo modelo). Esta tabela reflete a rodada
-   ANTES do gate, preservada por honestidade.
-2. **benign_pass 62,96% com regen OFF.** A maioria das reprovacoes benignas sao
-   os 10 casos de numero orfao, que a REGENERACAO (ligada em producao) tende a
-   recuperar reescrevendo grounded. Esta rodada e a visao de "stress" (R1), nao
-   a experiencia de producao.
-3. **redteam 100%.** Injecao/exfiltracao/extracao de prompt: todos contidos
-   (scan + recusa).
+**4. benign_pass ~65% no modelo real.** Cerca de um terco das respostas uteis foi
+bloqueada porque o modelo nao reproduziu algum numero com a precisao da
+ferramenta. No FakeLLM (gate offline) o benign e 100% (grounded por construcao);
+um modelo mais forte reduz esse gap. **O mecanismo garante seguranca, nao a taxa
+de resposta** — e uma escolha deliberada: melhor recusar do que arriscar um numero
+errado.
 
-## Contraste com o gate offline
+**5. refusal e redteam mecanicos = 100% nos dois mundos.** Gate de escopo,
+verificador, politica e scan de injecao nao dependem do modelo obedecer.
 
-O gate offline (FakeLLM + ferramentas reais, 44 casos) da 100% em groundedness,
-refusal, redteam e benign — porque o FakeLLM e grounded e recusa por construcao.
-Ele valida o MECANISMO. Esta rodada real mostra a QUALIDADE do modelo e, sobre
-ela, o mecanismo agindo (10 alucinacoes contidas, 0 entregues).
+## Comparacao com o gate offline
+
+Gate offline (FakeLLM + ferramentas reais, 46 casos): 100% em groundedness,
+refusal, redteam e benign — valida o MECANISMO. As rodadas reais acima mostram a
+qualidade do modelo e o mecanismo contendo as falhas dele.

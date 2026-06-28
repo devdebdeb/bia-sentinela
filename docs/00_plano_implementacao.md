@@ -212,14 +212,12 @@ a autoria. Sempre claro que e dado sintetico (derivado do PaySim, ODC-BY).
 
 ## 5b. Tarefas da ETAPA FINAL (antes de fechar o projeto)
 
-- [ ] **Rodada real de PRODUCAO (regen ON):** rodar `run_eval --real` com
-  `regenerate_on_orphan=True` no Ollama (qwen2.5:32b), alem da rodada de stress
-  (regen OFF) ja feita. Reportar as duas LADO A LADO: a de stress mostra o
-  contraste R1 vs R2 (10 alucinacoes contidas); a de producao mostra o
-  groundedness/benign apos o auto-conserto (espera-se benign_pass bem maior).
-  Adiar para a etapa final foi decisao do usuario.
-- [ ] Confirmar, na rodada de producao, que o gate de escopo levou a
-  refusal_accuracy a ~100% no modelo real.
+- [x] **Rodada real de PRODUCAO (regen ON):** FEITA (`run_eval --real --regen-on`,
+  Ollama qwen2.5:32b, 46 casos). Resultado lado a lado em
+  `analysis/eval_real_report.md`. Achado: a regeneracao recuperou so ~2 de 11
+  orfaos (best-effort num modelo fraco); o BLOQUEIO conteve 100% (nenhum numero
+  alucinado entregue). benign_pass ~65% (modelo nao reproduz numeros exatos).
+- [x] Gate de escopo confirmado no modelo real: refusal_accuracy = **100%**.
 
 ## 6. Pendencias do usuario (acoes humanas)
 

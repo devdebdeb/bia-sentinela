@@ -34,8 +34,14 @@ def run(harness, cases: list[EvalCase]) -> EvalSummary:  # noqa: ANN001
     return summarize(outcomes)
 
 
-def _print_report(summary: EvalSummary, *, real: bool, ok: bool, fails: list[str]) -> None:
-    rotulo = "MODELO REAL" if real else "offline (FakeLLM + ferramentas reais)"
+def _print_report(
+    summary: EvalSummary, *, real: bool, ok: bool, fails: list[str], regen_on: bool = False
+) -> None:
+    if real:
+        modo = "producao: regen ON" if regen_on else "stress: regen OFF"
+        rotulo = f"MODELO REAL ({modo})"
+    else:
+        rotulo = "offline (FakeLLM + ferramentas reais)"
     print(f"\n=== BIA Sentinela — Avaliacao [{rotulo}] ===")
     print(f"casos:                {summary.n}")
     print(f"groundedness_rate:    {summary.groundedness_rate:.2%}  (meta 100%)")
@@ -44,7 +50,7 @@ def _print_report(summary: EvalSummary, *, real: bool, ok: bool, fails: list[str
     print(f"benign_pass_rate:     {summary.benign_pass_rate:.2%}  (meta >=90%)")
     print(f"p95_latency_ms:       {summary.p95_latency_ms}")
     print(f"total_cost_usd:       {summary.total_cost_usd}")
-    if real:
+    if real and not regen_on:
         # R1 (sem verificador) vs R2 (com verificador): impacto do guardrail.
         print(
             f"\nR1 vs R2: o verificador conteve {summary.hallucinations_caught} resposta(s) "
@@ -53,18 +59,26 @@ def _print_report(summary: EvalSummary, *, real: bool, ok: bool, fails: list[str
             "  - Com o guardrail (R2), nenhuma resposta com numero orfao foi entregue."
         )
         print("\n(Numeros de MODELO REAL — reportados a parte; nao sao o gate offline.)\n")
+    elif real:
+        # Producao: regeneracao reescreve grounded; bloqueio so se falhar 2x.
+        print(
+            f"\nProducao (regen ON): {summary.hallucinations_caught} resposta(s) bloqueada(s) "
+            "apos a regeneracao tambem falhar. As demais com orfao foram reescritas grounded."
+        )
+        print("\n(Numeros de MODELO REAL — reportados a parte; nao sao o gate offline.)\n")
     else:
         print(f"\nGATE: {'PASSOU' if ok else 'FALHOU -> ' + ', '.join(fails)}\n")
 
 
-def _build_harness(*, real: bool, dio: bool):  # noqa: ANN202
+def _build_harness(*, real: bool, dio: bool, regen_on: bool):  # noqa: ANN202
     if real:
         from config.settings import get_settings  # noqa: PLC0415
 
         from ..harness.factory import build_production_harness  # noqa: PLC0415
 
-        # regeneracao OFF para EXPOR (e medir) as alucinacoes que o gate conteria.
-        s = get_settings().model_copy(update={"regenerate_on_orphan": False})
+        # --regen-on: visao de PRODUCAO (auto-conserto ligado).
+        # Padrao: regeneracao OFF, para EXPOR e medir as alucinacoes (stress R1/R2).
+        s = get_settings().model_copy(update={"regenerate_on_orphan": regen_on})
         base = "data/dio" if dio else "data/raw"
         return build_production_harness(data_dir=base, settings=s, dio=dio)
 
@@ -84,17 +98,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--redteam", default=None)
     parser.add_argument("--real", action="store_true", help="roda contra o LLM real (.env)")
     parser.add_argument("--dio", action="store_true", help="usa os dados reais da DIO")
+    parser.add_argument(
+        "--regen-on", action="store_true", help="modo real: regeneracao LIGADA (visao de producao)"
+    )
     args = parser.parse_args(argv)
 
     cases = load_cases(args.golden)
     if args.redteam:
         cases += load_cases(args.redteam)
 
-    harness = _build_harness(real=args.real, dio=args.dio)
+    harness = _build_harness(real=args.real, dio=args.dio, regen_on=args.regen_on)
     summary = run(harness, cases)
     ok, fails = (True, []) if args.real else summary.meets(DEFAULT_THRESHOLDS)
     try:
-        _print_report(summary, real=args.real, ok=ok, fails=fails)
+        _print_report(summary, real=args.real, ok=ok, fails=fails, regen_on=args.regen_on)
     except UnicodeEncodeError:
         print("BIA Sentinela eval -- GATE:", "PASS" if ok else "FAIL " + ",".join(fails))
     return 0 if ok else 1

@@ -38,9 +38,16 @@ benign_pass_rate       62,96%      <- visao de stress (regen OFF)
 hallucinations_caught  10
 ```
 
-> *A rodada real precede o gate de escopo mecanico. Com ele (deterministico), a
-> recusa de out_of_scope passa a ~100% independentemente do modelo. As demais
-> metricas nao mudam. Relatorio completo: `analysis/eval_real_report.md`.
+> *Rodada de stress (precede o gate de escopo). A rodada de PRODUCAO (regen ON,
+> com o gate) confirma no modelo real: **refusal 100%**, groundedness cru 80%,
+> benign 65,5%. Em ambas, todo numero orfao foi contido — 100% das respostas
+> ENTREGUES sao grounded. Relatorio completo (duas rodadas lado a lado):
+> `analysis/eval_real_report.md`.
+
+Achado honesto: a regeneracao e best-effort (o qwen recuperou ~2 de 11 casos); a
+camada confiavel e o BLOQUEIO. O `benign_pass` de ~65% no modelo real reflete o
+modelo nao reproduzir numeros com a precisao da ferramenta — o mecanismo garante
+seguranca, nao a taxa de resposta (melhor recusar do que arriscar numero errado).
 
 Esses numeros sao do modelo real e **nunca** devem ser apresentados como saida do
 FakeLLM (e vice-versa). O custo reportado pelo runner (~US$ 0,61) e ARTEFATO da
