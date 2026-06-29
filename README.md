@@ -1,50 +1,50 @@
 # BIA Sentinela
 
-Assistente financeira pessoal **proativa** que **nunca inventa um numero**.
-Projeto para o desafio "Bia do Futuro" (DIO).
+Assistente financeira pessoal com arquitetura de ferramentas determinísticas
+e verificação de proveniência numérica. Projeto para o desafio "Bia do Futuro" (DIO).
 
-Todo valor que a BIA mostra nasce numa camada deterministica de ferramentas e
-passa por um **verificador de proveniencia** antes de aparecer. O LLM escolhe as
-ferramentas e narra o resultado — ele nao origina numeros nem recomenda fora do
-perfil.
+Todo valor exibido ao usuário é produzido por ferramentas determinísticas e
+rastreado por um verificador de proveniência antes de ser entregue. O LLM opera
+como orquestrador: seleciona ferramentas, interpreta resultados e gera narrativa —
+sem originar valores numéricos nem recomendar produtos fora do perfil do usuário.
 
-## Por que
+## Decisões de Arquitetura
 
-Em financas, um numero errado dito com confianca e um risco real. A maioria dos
-agentes com LLM alucina valores. Aqui, a confiabilidade e **mecanica**, nao uma
-promessa do modelo:
+- **Ferramentas como única fonte numérica.** Nenhuma ferramenta exposta ao LLM
+  aceita valores externos como parâmetro; todos os números derivam dos dados
+  injetados ou de cálculo determinístico interno.
+- **Verificador de proveniência em camada separada.** Respostas com valores sem
+  rastreabilidade são bloqueadas antes de chegar ao usuário, independentemente
+  do conteúdo gerado pelo LLM.
+- **Suitability como restrição estrutural.** A avaliação de perfil do usuário
+  não é sugestão ao LLM — é um filtro aplicado antes da recomendação.
+- **Gates de escopo e injeção.** Requisições fora do domínio financeiro são
+  recusadas; conteúdo externo injetado via dados é tratado como inerte pelo
+  orquestrador.
 
-- **Numeros so de ferramenta.** Nenhuma ferramenta exposta ao LLM aceita valores
-  do exterior; tudo vem dos dados injetados ou do calculo.
-- **Verificador de proveniencia.** Numero sem origem e barrado antes de chegar ao
-  usuario.
-- **Suitability como teto.** So recomenda produtos adequados ao perfil.
-- **Gates de escopo e injecao.** Recusa fora de financas e trata dado externo como
-  inerte.
+## Demonstração
 
-## Demonstracao
-
-Abertura proativa — a BIA varre os dados e antecipa gastos atipicos, caixa
-parado, golpe de PIX e produtos adequados ao perfil. Todo numero vem de uma
-ferramenta deterministica.
+Na inicialização, o sistema executa automaticamente as ferramentas de detecção
+de anomalias, avaliação de suitability e análise de risco de fraude PIX,
+consolidando os resultados antes da primeira interação do usuário.
 
 ![Abertura proativa da BIA Sentinela](docs/img/demo.png)
 
-Chat — cada resposta traz o selo de transparencia (ferramentas usadas e resultado
-da verificacao de proveniencia):
+No modo de chat, cada resposta inclui metadados de rastreabilidade: ferramentas
+invocadas e resultado da verificação de proveniência.
 
-![Chat grounded com selo de verificacao](docs/img/demo_chat.png)
+![Chat grounded com metadados de rastreabilidade](docs/img/demo_chat.png)
 
 ## Capacidades
 
-Abertura proativa (varre os dados e antecipa) + chat. Ferramentas:
+Inicialização com varredura automática + chat. Ferramentas disponíveis:
 
-- `resumo_gastos` — gastos por categoria (dados reais).
-- `detectar_anomalias` — picos atipicos (IsolationForest) + degraus de assinatura.
-- `avaliar_suitability` — produtos adequados ao perfil, ranqueados por objetivo.
-- `simular_meta` — probabilidade de atingir metas (juros compostos + Monte Carlo).
-- `consultar_glossario` / `consultar_produto` — base de conhecimento.
-- `detectar_fraude_pix` — risco de golpe em PIX (modelo supervisionado).
+- `resumo_gastos` — agregação de gastos por categoria a partir dos dados reais.
+- `detectar_anomalias` — identificação de picos atípicos (IsolationForest) e degraus de assinatura.
+- `avaliar_suitability` — ranqueamento de produtos adequados ao perfil e objetivo do usuário.
+- `simular_meta` — estimativa de probabilidade de atingimento de metas (juros compostos + Monte Carlo).
+- `consultar_glossario` / `consultar_produto` — consulta à base de conhecimento estruturada.
+- `detectar_fraude_pix` — avaliação de risco de fraude em transações PIX (modelo supervisionado).
 
 ## Como rodar
 
@@ -60,22 +60,22 @@ pip install -e ".[dev,ml,ui]"      # core + testes + sklearn + streamlit
 make run            # ou: python -m streamlit run src/bia_sentinela/app.py
 ```
 
-- **Modo Demo (sem chave):** funciona offline com um FakeLLM no mesmo harness e
-  guardrails. Ideal para a gravacao do pitch.
-- **Modo Real:** usa o provedor configurado no `.env`.
+- **Modo Demo (sem chave):** executa offline com FakeLLM no mesmo harness e
+  guardrails. Adequado para validação do mecanismo sem dependência de provedor externo.
+- **Modo Real:** utiliza o provedor configurado no `.env`.
 
-### LLM real, de graca
+### LLM real, de graça
 
-Copie `.env.example` para `.env`. Opcoes (qualquer uma):
+Copie `.env.example` para `.env`. Opções (qualquer uma):
 
-- **Groq** (hospedado, gratis, sem cartao): chave em console.groq.com.
+- **Groq** (hospedado, gratuito, sem cartão): chave em console.groq.com.
 - **Ollama** (local, offline, sem limite): `ollama pull qwen2.5:32b` e ajuste o
   `.env` para `http://localhost:11434/v1`.
-- **Google Gemini** (free tier) ou **Anthropic** (pago) tambem suportados.
+- **Google Gemini** (free tier) ou **Anthropic** (pago) também suportados.
 
-A chave e lida do ambiente — nunca e versionada nem logada.
+A chave é lida do ambiente — nunca é versionada nem registrada em log.
 
-### Testes e avaliacao
+### Testes e avaliação
 
 ```bash
 make test                                   # suite de testes (ou: pytest -q)
@@ -83,64 +83,69 @@ make test                                   # suite de testes (ou: pytest -q)
 # eval offline (gate). Com 'pip install -e', rode da raiz do projeto:
 python -m bia_sentinela.eval.run_eval \
     --golden eval_data/golden_set.jsonl --redteam eval_data/redteam_set.jsonl
-# eval com modelo real (rotulado a parte):  ... --real
+# eval com modelo real (rotulado à parte):  ... --real
 ```
 
 ## Resultados
 
-**Gate offline (FakeLLM + ferramentas reais) — valida o MECANISMO:**
+**Gate offline (FakeLLM + ferramentas reais) — validação do mecanismo:**
 
 ```
 casos: 46   groundedness 100%   refusal 100%   redteam 100%   benign 100%   GATE: PASSOU
 ```
 
-**Modelo real (qwen2.5:32b local) — valida a QUALIDADE e o guardrail em acao:**
-o verificador conteve **10 respostas com numeros sem proveniencia** (R1 vs R2): o
-groundedness cru de 77% vira **100% de respostas entregues grounded**.
+**Modelo real (qwen2.5:32b local) — validação de qualidade com guardrail ativo:**
+O verificador filtrou 10 respostas com valores sem proveniência rastreável
+(regime R1 vs R2): o groundedness bruto de 77% atingiu 100% nas respostas
+efetivamente entregues ao usuário após filtragem.
 
-**Componentes deterministicos:** deteccao de anomalias com recall 100% (detector
-combinado, sobre 5 anomalias plantadas); fraude PIX com **ROC-AUC 0,9967** em
-holdout — **metricas a prevalencia sintetica (~16,7%)**; a prevalencia real
-(~0,77%) a precision recalibrada cai para ~40% e ha possivel vazamento de rotulo
-do PaySim. Limitacoes e a recalibracao completa em
+**Componentes determinísticos:** detecção de anomalias com recall de 100%
+(detector combinado, sobre 5 anomalias plantadas); detecção de fraude PIX com
+ROC-AUC de 0,9967 em holdout. Essas métricas refletem prevalência sintética
+(~16,7%); sob prevalência estimada para o contexto real (~0,77%), a precisão
+recalibrada cai para ~40%. A sobreposição de features entre treino e holdout
+no dataset PaySim indica possível vazamento de rótulo. Limitações e
+recalibração completa em
 [docs/04_metricas.md](docs/04_metricas.md#ressalvas-de-interpretacao-fraude-pix).
 
-Detalhes e a distincao FakeLLM vs modelo real: [docs/04_metricas.md](docs/04_metricas.md).
+Detalhes e a distinção FakeLLM vs modelo real: [docs/04_metricas.md](docs/04_metricas.md).
 
 ## Dados
 
-- **Sintetico (default):** 12 meses de transacoes reproduziveis, com anomalias
-  rotuladas (`data/raw`, `data/synthetic`) — demonstra a deteccao de anomalias.
+- **Sintético (default):** 12 meses de transações reproduzíveis, com anomalias
+  rotuladas (`data/raw`, `data/synthetic`) — base para demonstração da detecção de anomalias.
 - **DIO (oficial):** os 4 arquivos do desafio em `data/dio/`, suportados via
-  adaptador (selecionaveis na UI). O exemplo da DIO e enxuto (1 mes), por isso o
-  sintetico e o default para mostrar a capacidade de anomalias.
-- **Fraude PIX:** amostra do dataset autoral `andremessina/pix-fraud-br`
-  (sintetico, derivado do PaySim, ODC-BY) em `data/pix_sample/`.
+  adaptador (selecionáveis na UI). O conjunto DIO cobre 1 mês; o sintético é o
+  default por permitir avaliação longitudinal da capacidade de detecção.
+- **Fraude PIX:** amostra do dataset `andremessina/pix-fraud-br`
+  (sintético, derivado do PaySim, ODC-BY) em `data/pix_sample/`.
 
-## Documentacao
+## Documentação
 
-- [01 — Caso de uso, arquitetura, anti-alucinacao](docs/01_caso_de_uso.md)
+- [01 — Caso de uso, arquitetura, anti-alucinação](docs/01_caso_de_uso.md)
 - [02 — Base de conhecimento](docs/02_base_conhecimento.md)
 - [03 — Prompts, exemplos e edge cases](docs/03_prompts.md)
-- [04 — Metricas](docs/04_metricas.md)
+- [04 — Métricas](docs/04_metricas.md)
 - [05 — Pitch (roteiro + slides)](docs/05_pitch.md)
-- [Plano de implementacao](docs/00_plano_implementacao.md) · [Harness](README_HARNESS.md)
+- [Plano de implementação](docs/00_plano_implementacao.md) · [Harness](README_HARNESS.md)
 
-## Inspiracao
+## Referências de Arquitetura
 
-Arquitetura inspirada em praticas abertas do **Santander AI Lab**
-(github.com/SantanderAI) — convergencia/inspiracao, com implementacao propria:
+Os seguintes repositórios do **Santander AI Lab** (github.com/SantanderAI)
+influenciaram decisões de design; a implementação é integralmente original:
 
-- `mech-gov-framework` — governanca mecanica de LLM / hard gates (nossos regimes
-  R1 vs R2 na avaliacao).
-- `llm_bridge` — cliente de LLM vendor-neutral (nosso `OpenAICompatLLM`).
-- `autoguardrails` — guardrails dirigidos por politica + eval fixo.
-- `gen-fraud-graph` — dados financeiros sinteticos com anomalias rotuladas.
+- `mech-gov-framework` — governança mecânica de LLM e hard gates (base conceitual
+  para os regimes R1/R2 na avaliação).
+- `llm_bridge` — cliente LLM vendor-neutral (referência para o `OpenAICompatLLM`).
+- `autoguardrails` — guardrails dirigidos por política com eval fixo.
+- `gen-fraud-graph` — geração de dados financeiros sintéticos com anomalias rotuladas.
 
-## Limitacoes e proximos passos
+## Limitações e Próximos Passos
 
-- Recusa de escopo de modelos fracos e contida por um gate mecanico; um
-  classificador de escopo dedicado pode refinar.
-- Conhecimento por lookup; evoluir para RAG por embeddings se o corpus crescer.
-- Deferral a um humano (caso ambiguo) como terceiro caminho alem de
-  responder/bloquear.
+- A recusa de escopo em modelos menos capazes é reforçada por gate mecânico; um
+  classificador de escopo dedicado permitiria maior precisão nessa camada.
+- O mecanismo de consulta à base de conhecimento opera por lookup estruturado;
+  a migração para RAG por embeddings é indicada se o corpus crescer.
+- O sistema opera com dois caminhos de resposta (responder ou bloquear); um
+  terceiro caminho de deferimento a um humano (para casos ambíguos) não está
+  implementado.
