@@ -96,9 +96,11 @@ e peso ao projeto e ao dataset. Escopo acordado:
 - Amostra estratificada COMITADA (`data/pix_sample/`, ~6k linhas, 1k fraude
   oversampled; ODC-BY com atribuicao ao autor e ao PaySim). Script reproduzivel
   em `scripts/build_pix_sample.py`. Honestidade: e SINTETICO, nao real.
-- Modelo sklearn (RandomForest, seed fixa) treinado no load; metricas honestas
-  num holdout estratificado: **ROC-AUC 0,9967, PR-AUC 0,9857, recall 0,952,
-  precision 0,944** (n_test=1500, 250 fraudes).
+- Modelo sklearn (RandomForest, seed fixa) treinado no load; metricas num holdout
+  estratificado: **ROC-AUC 0,9967, PR-AUC 0,9857, recall 0,952, precision 0,944**
+  (n_test=1500, 250 fraudes). Ressalva: **prevalencia sintetica (~16,7%)**; a 0,77%
+  real a precision recalibrada cai para ~40% e ha possivel vazamento de rotulo do
+  PaySim (ver `docs/04_metricas.md`, "Ressalvas de interpretacao").
 - Integrado ao harness, ao scan proativo ("Alerta: possivel golpe de PIX") e ao
   modo demo. Contrato Tool->Insight; numeros nascem no modelo/dados.
 

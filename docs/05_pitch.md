@@ -30,7 +30,12 @@ numeros."
 "Medimos o valor do guardrail. Rodando um LLM real, ele produziu 10 respostas com
 numeros sem origem. Sem o verificador, iriam para o cliente. Com ele, zero
 chegaram. Groundedness cru de 77% vira 100% de respostas entregues confiaveis. E
-a deteccao de fraude PIX tem ROC-AUC de 0,99 em dados de teste."
+a deteccao de fraude PIX tem ROC-AUC de 0,99 em dados de teste sinteticos."
+
+> Nota ao apresentador (se perguntarem): o ROC-AUC e robusto a prevalencia, mas
+> as metricas sao a uma taxa de fraude sintetica (~16,7%); na taxa real (~0,77%) a
+> precision recalibrada cai para ~40% e ha possivel vazamento de rotulo do PaySim.
+> Honestidade > numero bonito — detalhes em `docs/04_metricas.md`.
 
 **2:20–2:50 — Engenharia (credibilidade)**
 "Arquitetura agnostica de provedor (roda local no Ollama, de graca), guardrails
@@ -48,7 +53,8 @@ desafio suportados. Inspirado em praticas abertas do Santander AI Lab."
    (diagrama do fluxo do harness).
 4. **Demo:** screenshots da abertura proativa + chat (anomalia, meta, recusa).
 5. **Resultados:** gate offline 100% (mecanismo); modelo real — R1 vs R2 (10
-   alucinacoes contidas); fraude PIX ROC-AUC 0,99. Rotular FakeLLM vs real.
+   alucinacoes contidas); fraude PIX ROC-AUC 0,99 (sintetico; ressalvas de
+   prevalencia/vazamento em `docs/04`). Rotular FakeLLM vs real.
 6. **Engenharia:** agnostico de provedor (Groq/Ollama/Gemini), guardrails
    mecanicos, eval no CI; inspiracao no Santander AI Lab.
 7. **Fecho + proximos passos:** RAG, deferral a humano, dados reais em producao.

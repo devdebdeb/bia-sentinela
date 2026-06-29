@@ -27,7 +27,9 @@ for _p in (str(_ROOT), str(_ROOT / "src")):
 import streamlit as st  # noqa: E402
 
 from bia_sentinela.demo import build_demo_harness, scan_proativo  # noqa: E402
+from bia_sentinela.observability.logging import configure_logging  # noqa: E402
 from bia_sentinela.prompts import PROMPT_VERSION  # noqa: E402
+from config.settings import get_settings  # noqa: E402
 
 
 @st.cache_resource
@@ -70,6 +72,11 @@ def _render_turno(res) -> None:  # noqa: ANN001
 
 
 def main() -> None:
+    # Liga o logging estruturado (JSON-lines + redacao de PII) no startup da UI.
+    # Idempotente: a primeira chamada vence (guard _CONFIGURED).
+    _s = get_settings()
+    configure_logging(level=_s.log_level, redact_pii=_s.log_redact_pii, log_file=_s.log_file)
+
     st.set_page_config(page_title="BIA Sentinela", page_icon=":bar_chart:", layout="centered")
     st.title("BIA Sentinela")
     st.caption(

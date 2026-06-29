@@ -26,6 +26,7 @@ from ..data.ingestion import (
 )
 from ..guardrails.policy import PolicyGate, PromessasProibidasRule, SuitabilityRule
 from ..guardrails.scope import ScopeGuardedHarness
+from ..observability.logging import configure_logging
 from ..prompts import SYSTEM_PROMPT
 from ..tools.build import build_registry
 
@@ -83,6 +84,9 @@ def build_production_harness(
     from .runtime import AgentHarness  # noqa: PLC0415 (import tardio evita ciclo)
 
     s = settings or get_settings()
+    # Liga o logging estruturado (JSON + redacao de PII) antes de qualquer chamada
+    # ao LLM. Idempotente: se a UI ja configurou, esta chamada e no-op.
+    configure_logging(level=s.log_level, redact_pii=s.log_redact_pii, log_file=s.log_file)
     base = Path(data_dir)
 
     if dio:

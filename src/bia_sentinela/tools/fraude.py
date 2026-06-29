@@ -77,7 +77,12 @@ def treinar_modelo(df_train: pd.DataFrame, *, seed: int = 42):  # noqa: ANN201
 
 
 def avaliar_holdout(modelo, df_test: pd.DataFrame) -> dict[str, float]:  # noqa: ANN001
-    """Metricas honestas num holdout estratificado (ROC-AUC, PR-AUC, recall)."""
+    """Metricas num holdout estratificado interno (ROC-AUC, PR-AUC, recall).
+
+    Atencao: a prevalencia do holdout e a da amostra oversampled (~16,7%), nao a
+    real (~0,77%). ROC-AUC e invariante a prevalencia; PR-AUC/precision nao. Ver
+    docs/04_metricas.md ("Ressalvas de interpretacao") para a recalibracao.
+    """
     from sklearn.metrics import (  # noqa: PLC0415
         average_precision_score,
         precision_score,

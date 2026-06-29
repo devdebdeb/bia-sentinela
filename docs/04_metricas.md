@@ -69,6 +69,40 @@ Inspirado nos regimes do `SantanderAI/mech-gov-framework`:
   sintetica, documentado.)
 - **Fraude PIX** (holdout estratificado, n=1500, 250 fraudes):
   **ROC-AUC 0,9967 · PR-AUC 0,9857 · recall 0,952 · precision 0,944**.
+  Numeros **a prevalencia sintetica (~16,7%)**; ver ressalvas abaixo.
+
+### Ressalvas de interpretacao (fraude PIX)
+
+Estas metricas sao honestas para o dataset, mas **nao** devem ser lidas como
+desempenho esperado em PIX real. Tres pontos:
+
+1. **Prevalencia inflada.** A amostra de treino/teste tem ~16,7% de fraude
+   (250/1500 no holdout), enquanto a fraude real no dataset completo e **~0,77%**.
+   A fraude foi *oversampled* de proposito para dar sinal de treino (ver
+   `data/pix_sample/README.md`).
+
+2. **ROC-AUC sobrevive, PR-AUC e precision nao.** ROC-AUC e uma metrica de
+   ranqueamento, **invariante a prevalencia** — os 0,9967 se sustentam. Ja PR-AUC,
+   precision e o baseline dependem da taxa de positivos. O baseline ingenuo
+   (classificador aleatorio) tem precision = prevalencia: **16,7% na amostra vs
+   0,77% no real**. Recalibrando o ponto de operacao reportado (recall 95,2%,
+   FPR implicito ~1,1%) para a prevalencia real pela formula de Saito &
+   Rehmsmeier (2015), `precision = TPR·pi / (TPR·pi + FPR·(1-pi))`, a precision
+   cairia de 0,944 para **~0,40** com a mesma recall. Ou seja: a 0,77% real, a
+   cada ~5 alertas ~3 seriam falsos positivos — muito diferente do que 94%
+   sugere.
+
+3. **Possivel vazamento de rotulo (PaySim).** As features `razao_saldo_residual`,
+   `proporcao_valor_recebedor` e os `saldo_posterior_*` derivam do saldo **apos** a
+   transacao. No PaySim, a fraude e essencialmente *definida* por esvaziar a conta;
+   essas features codificam parcialmente o mecanismo gerador do rotulo, inflando a
+   separabilidade. Isso explica o ROC-AUC ~1,0 e indica que o modelo **nao
+   transfere** para fraude PIX real sem re-validacao com features causalmente
+   validas (conhecidas no momento da decisao) e prevalencia real.
+
+**Leitura justa:** o detector demonstra o *pipeline* supervisionado (treino,
+holdout estratificado, reprodutibilidade, ferramenta que nao inventa numeros),
+nao um desempenho pronto para producao.
 
 ## Reprodutibilidade
 

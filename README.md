@@ -99,7 +99,11 @@ o verificador conteve **10 respostas com numeros sem proveniencia** (R1 vs R2): 
 groundedness cru de 77% vira **100% de respostas entregues grounded**.
 
 **Componentes deterministicos:** deteccao de anomalias com recall 100% (detector
-combinado); fraude PIX com **ROC-AUC 0,9967** em holdout.
+combinado, sobre 5 anomalias plantadas); fraude PIX com **ROC-AUC 0,9967** em
+holdout — **metricas a prevalencia sintetica (~16,7%)**; a prevalencia real
+(~0,77%) a precision recalibrada cai para ~40% e ha possivel vazamento de rotulo
+do PaySim. Limitacoes e a recalibracao completa em
+[docs/04_metricas.md](docs/04_metricas.md#ressalvas-de-interpretacao-fraude-pix).
 
 Detalhes e a distincao FakeLLM vs modelo real: [docs/04_metricas.md](docs/04_metricas.md).
 

@@ -15,9 +15,12 @@ Fluxo, cada etapa logada:
 
 from __future__ import annotations
 
+import uuid
+
 from ..guardrails.policy import PolicyGate
 from ..guardrails.verifier import NumericVerifier, extract_numbers
 from ..llm.base import LLMClient, LLMResponse, Message
+from ..prompts import PROMPT_VERSION
 from ..schemas import (
     Insight,
     LLMUsage,
@@ -67,11 +70,18 @@ class AgentHarness:
     def run_turn(self, user_message: str) -> TurnResult:
         ctx = RunContext.new(self._seed)
         t0 = now_ms()
+        # Nonce por turno: torna o delimitador da zona nao-confiavel imprevisivel,
+        # impedindo que dado externo forje a moldura e injete instrucoes.
+        fence_nonce = uuid.uuid4().hex
 
         clean = sanitize_input(user_message)
         injection_flags = scan(clean)
         ctx.logger.info(
-            "turn_start", n_chars=len(clean), injection_flags=injection_flags, seed=self._seed
+            "turn_start",
+            n_chars=len(clean),
+            injection_flags=injection_flags,
+            seed=self._seed,
+            prompt_version=PROMPT_VERSION,
         )
         if injection_flags:
             ctx.logger.warning("injection_detected", flags=injection_flags)
@@ -93,14 +103,18 @@ class AgentHarness:
                     Message(
                         role="tool",
                         tool_call_id=call.id,
-                        content=wrap_untrusted(insight.model_dump_json(), source=call.name),
+                        content=wrap_untrusted(
+                            insight.model_dump_json(), source=call.name, nonce=fence_nonce
+                        ),
                     )
                 )
         else:
             ctx.logger.warning("max_steps_reached", steps=self._max_steps)
             final_text = final_text or ""
 
-        return self._finalize(ctx, clean, final_text, insights, injection_flags, t0)
+        return self._finalize(
+            ctx, clean, final_text, insights, injection_flags, t0, fence_nonce
+        )
 
     def _call_llm(self, ctx: RunContext, messages: list[Message]) -> LLMResponse:
         t = now_ms()
@@ -145,7 +159,7 @@ class AgentHarness:
             # falha vira insight sem números, para o LLM não receber valor falso
             return Insight(fonte=name, resumo=f"Ferramenta '{name}' falhou.", numeros=[])
 
-    def _finalize(self, ctx, user_msg, text, insights, injection_flags, t0) -> TurnResult:  # noqa: ANN001
+    def _finalize(self, ctx, user_msg, text, insights, injection_flags, t0, fence_nonce=None) -> TurnResult:  # noqa: ANN001, E501
         user_numbers = (
             [v for _, v in extract_numbers(user_msg)] if self._allow_user_numbers else []
         )
@@ -187,7 +201,7 @@ class AgentHarness:
                 "blocked", reason=block_reason, violations=[v.rule for v in policy.violations]
             )
 
-        safe = sanitize_output(text)
+        safe = sanitize_output(text, nonce=fence_nonce)
         total_latency = round(now_ms() - t0, 1)
         ctx.logger.info(
             "turn_complete",
@@ -196,6 +210,7 @@ class AgentHarness:
             verification_ok=report.ok,
             policy_ok=policy.ok,
             latency_ms=total_latency,
+            prompt_version=PROMPT_VERSION,
             total_cost_usd=round(sum(u.cost_usd for u in ctx.usage), 6),
             total_tokens=sum(u.input_tokens + u.output_tokens for u in ctx.usage),
         )
