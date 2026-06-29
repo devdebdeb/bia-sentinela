@@ -74,3 +74,19 @@ Correcoes pos-avaliacao da banca. Mudancas cirurgicas (sem alterar arquitetura);
   `numeros=insight.numeros` (valores em claro) no evento `tool_ok`; agora loga so
   `n_numeros` (contagem). Os valores continuam fluindo ao usuario via Insight, mas
   nao sao persistidos no log. Novos testes em `tests/test_redaction.py`.
+
+### Nice-to-have
+
+- **Secret-scanning no CI (3.3).** Novo job `secret-scan` em
+  `.github/workflows/ci.yml` roda o gitleaks (v8.18.4, historico completo) e falha
+  o build se encontrar credencial commitada.
+- **LLM-as-judge plugado ao eval (3.1).** `eval/judge.py` (antes orfao) agora e
+  acionavel via `run_eval --judge`: roda sobre as respostas benignas entregues e
+  reporta a nota media (1-5). Opt-in, best-effort (pula sem chave) e **nao** e
+  gate. `run()` passou a retornar `(summary, results)` para evitar reexecutar o
+  harness.
+- **GIF de demo (3.2) — pendente (manual).** Requer gravacao de tela; nao
+  automatizavel aqui. Roteiro sugerido: abertura proativa -> pergunta que gera
+  numero -> selo "verificado: ok"; depois um caso adversarial mostrando
+  "bloqueado: numeros_orfaos". Salvar em `docs/img/demo.gif` e referenciar no
+  README no lugar dos screenshots estaticos.

@@ -16,3 +16,14 @@ jobs:
         run: pytest -q
       - name: Eval gate (offline)
         run: python -m bia_sentinela.eval.run_eval --golden eval_data/golden_set.jsonl --redteam eval_data/redteam_set.jsonl
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # historico completo: pega segredo que ja tenha sido commitado
+      - name: Scan for secrets (gitleaks)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --no-banner --redact --exit-code 1

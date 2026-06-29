@@ -10,7 +10,10 @@ Dois modos:
 
 Uso:
     python -m bia_sentinela.eval.run_eval --golden eval_data/golden_set.jsonl \
-        --redteam eval_data/redteam_set.jsonl [--real] [--dio]
+        --redteam eval_data/redteam_set.jsonl [--real] [--dio] [--judge]
+
+`--judge` adiciona um passo opcional de LLM-as-judge sobre as benignas (qualidade
+subjetiva; nao e gate; usa o provedor configurado e e pulado sem chave).
 """
 
 from __future__ import annotations
@@ -29,9 +32,50 @@ DEFAULT_THRESHOLDS = {
 }
 
 
-def run(harness, cases: list[EvalCase]) -> EvalSummary:  # noqa: ANN001
-    outcomes = [make_outcome(c, harness.run_turn(c.pergunta)) for c in cases]
-    return summarize(outcomes)
+def run(harness, cases: list[EvalCase]):  # noqa: ANN001, ANN201
+    """Roda os casos e retorna (summary, results), com results=(caso, TurnResult).
+
+    Os results permitem um passo opcional de LLM-as-judge sem reexecutar o harness.
+    """
+    results = [(c, harness.run_turn(c.pergunta)) for c in cases]
+    outcomes = [make_outcome(c, r) for c, r in results]
+    return summarize(outcomes), results
+
+
+_BENIGNAS_JUDGE = ("factual", "recomendacao", "simulacao", "conhecimento")
+
+
+def _run_judge(results, settings) -> None:  # noqa: ANN001
+    """LLM-as-judge (opcional) sobre as respostas benignas entregues.
+
+    Usa o provedor configurado (mesmo do eval). Best-effort: se o LLM nao puder
+    ser construido (sem chave), pula sem afetar o gate. A nota e sinal de
+    qualidade subjetiva, nunca um criterio de aprovacao.
+    """
+    from ..harness.factory import build_llm  # noqa: PLC0415
+    from .judge import judge  # noqa: PLC0415
+
+    try:
+        judge_llm = build_llm(settings)
+    except Exception as exc:  # noqa: BLE001
+        print(f"\n[--judge] pulado: nao foi possivel construir o LLM do juiz ({exc}).")
+        return
+
+    notas: list[int] = []
+    for case, res in results:
+        if case.categoria not in _BENIGNAS_JUDGE or res.blocked:
+            continue
+        nota = judge(judge_llm, case.pergunta, res.response).get("nota", 0)
+        if nota:
+            notas.append(nota)
+    if notas:
+        print(
+            f"\nLLM-as-judge (benignas entregues, n={len(notas)}): "
+            f"nota media {sum(notas) / len(notas):.2f}/5 "
+            "(sinal de qualidade subjetiva; nao e gate)."
+        )
+    else:
+        print("\n[--judge] nenhuma nota valida obtida.")
 
 
 def _print_report(
@@ -101,6 +145,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--regen-on", action="store_true", help="modo real: regeneracao LIGADA (visao de producao)"
     )
+    parser.add_argument(
+        "--judge",
+        action="store_true",
+        help="roda LLM-as-judge nas benignas (usa o provedor configurado; nao e gate)",
+    )
     args = parser.parse_args(argv)
 
     cases = load_cases(args.golden)
@@ -108,12 +157,17 @@ def main(argv: list[str] | None = None) -> int:
         cases += load_cases(args.redteam)
 
     harness = _build_harness(real=args.real, dio=args.dio, regen_on=args.regen_on)
-    summary = run(harness, cases)
+    summary, results = run(harness, cases)
     ok, fails = (True, []) if args.real else summary.meets(DEFAULT_THRESHOLDS)
     try:
         _print_report(summary, real=args.real, ok=ok, fails=fails, regen_on=args.regen_on)
     except UnicodeEncodeError:
         print("BIA Sentinela eval -- GATE:", "PASS" if ok else "FAIL " + ",".join(fails))
+
+    if args.judge:
+        from config.settings import get_settings  # noqa: PLC0415
+
+        _run_judge(results, get_settings())
     return 0 if ok else 1
 
 
