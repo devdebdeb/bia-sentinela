@@ -35,3 +35,42 @@ Correcoes pos-avaliacao da banca. Mudancas cirurgicas (sem alterar arquitetura);
   ressalva foi propagada para `README.md`, `docs/00`, `docs/05` e o docstring de
   `tools/fraude.py:avaliar_holdout` — nenhuma metrica de fraude aparece mais sem
   a nota.
+
+### Robustez / LLMOps
+
+- **`_tool_use_memory` com vida por turno (2.1).** Em `llm/openai_compat.py` e
+  `llm/anthropic_client.py`, a memoria de tool_calls (necessaria para reconstruir o
+  turno `assistant` multi-step) era atributo de instancia que acumulava entre
+  turnos; como o harness e cacheado via `st.cache_resource` (compartilhado entre
+  sessoes), vazava ids de um turno/sessao para outro. Agora `complete()` chama
+  `_reset_memory_if_new_turn()`, que zera a memoria na 1a chamada de cada turno
+  (ausencia de mensagem `role="tool"`), preservando-a nas chamadas seguintes do
+  mesmo turno. Testes novos em ambos os clientes.
+  - **Tradeoff registrado:** a sugestao "variavel local em `complete()`" nao serve
+    porque a memoria precisa sobreviver entre as multiplas chamadas `complete()`
+    de um turno. O fix totalmente robusto (thread-safe entre sessoes concorrentes)
+    seria tornar a reconstrucao *stateless* — o harness reanexar o turno
+    `assistant`/`tool_use` na conversa — ou nao compartilhar o cliente entre
+    sessoes. Sao mudancas maiores de arquitetura; ficam como proximo passo.
+
+### Seguranca (guardrails)
+
+- **SuitabilityRule resistente a acento/parafrase (2.2).** `guardrails/policy.py`
+  agora normaliza resposta e catalogo com NFKD + drop de diacriticos (`_ascii`)
+  antes da comparacao: 'Fundo de Acoes' (catalogo) passa a casar 'Fundo de Ações'
+  (resposta), fechando o bypass por acento. A checagem por `produto_id` (ja
+  existente) foi mantida e tambem normalizada. Novos testes em `tests/test_policy.py`
+  (nome acentuado, citacao por id, e nao-falso-positivo em elegivel acentuado) e 2
+  casos benignos no `eval_data/golden_set.jsonl` (g035 com acento, g036 descritivo
+  sem nome). `run_eval` offline: 48 casos, 100% em todas as metricas, GATE PASSOU.
+
+### Privacidade / LGPD
+
+- **Redacao de PII financeira ampliada (2.3).** `security/redaction.py` agora cobre
+  **chave Pix aleatoria (UUID)**, **agencia (4+DV)** e **conta corrente (5-12+DV)**,
+  e o regex de **CPF aceita espacos** ("123 456 789 00"). A ordem dos padroes foi
+  ajustada (CONTA antes de CARTAO; AGENCIA por ultimo) para um nao engolir o outro.
+- **Valores financeiros fora do log (2.3).** `harness/runtime.py` deixou de logar
+  `numeros=insight.numeros` (valores em claro) no evento `tool_ok`; agora loga so
+  `n_numeros` (contagem). Os valores continuam fluindo ao usuario via Insight, mas
+  nao sao persistidos no log. Novos testes em `tests/test_redaction.py`.

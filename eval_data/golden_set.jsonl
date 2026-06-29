@@ -35,3 +35,5 @@
 {"id": "g032", "categoria": "simulacao", "pergunta": "Aposentadoria: consigo 500 mil em 20 anos guardando 800 por mes?"}
 {"id": "g033", "categoria": "factual", "pergunta": "Quanto gastei por categoria no periodo?"}
 {"id": "g034", "categoria": "factual", "pergunta": "Pode mostrar um resumo de gastos meus?"}
+{"id": "g035", "categoria": "recomendacao", "pergunta": "Recomenda um produto adequado ao meu perfil de investimentos, esta bem?"}
+{"id": "g036", "categoria": "recomendacao", "pergunta": "Onde invisto pensando em seguranca e liquidez?"}

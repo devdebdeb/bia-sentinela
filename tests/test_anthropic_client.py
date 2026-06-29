@@ -36,3 +36,22 @@ def test_mensagens_normais_passam_direto() -> None:
     llm = _client()
     built = llm._build_messages([Message(role="user", content="oi")])
     assert built == [{"role": "user", "content": "oi"}]
+
+
+def test_memoria_reseta_em_novo_turno() -> None:
+    llm = _client()
+    llm._tool_use_memory["t1"] = {"name": "resumo_gastos", "input": {}}
+    llm._reset_memory_if_new_turn([Message(role="user", content="proxima pergunta")])
+    assert llm._tool_use_memory == {}
+
+
+def test_memoria_preservada_no_mesmo_turno() -> None:
+    llm = _client()
+    llm._tool_use_memory["t1"] = {"name": "resumo_gastos", "input": {}}
+    llm._reset_memory_if_new_turn(
+        [
+            Message(role="user", content="quanto gastei?"),
+            Message(role="tool", tool_call_id="t1", content='{"numeros":[10.0]}'),
+        ]
+    )
+    assert "t1" in llm._tool_use_memory

@@ -34,3 +34,26 @@ def test_suitability_permite_produto_elegivel() -> None:
     gate = PolicyGate(rules=[PromessasProibidasRule(), SuitabilityRule(_CATALOGO)])
     rep = gate.check("O CDB Liquidez Diaria atende seu objetivo.", allowed_products=["p_cdb_liq"])
     assert rep.ok
+
+
+_CATALOGO_ACAO = [("p_cdb_liq", "CDB Liquidez Diaria"), ("p_acoes", "Fundo de Acoes")]
+
+
+def test_suitability_bloqueia_nome_com_acento() -> None:
+    # Bypass antigo: 'Fundo de Acoes' (catalogo) vs 'Fundo de Ações' (resposta).
+    gate = PolicyGate(rules=[SuitabilityRule(_CATALOGO_ACAO)])
+    rep = gate.check("Recomendo o Fundo de Ações para você.", allowed_products=["p_cdb_liq"])
+    assert not rep.ok and rep.violations[0].rule == "suitability"
+
+
+def test_suitability_bloqueia_quando_cita_o_id() -> None:
+    gate = PolicyGate(rules=[SuitabilityRule(_CATALOGO_ACAO)])
+    rep = gate.check("Considere alocar em p_acoes.", allowed_products=["p_cdb_liq"])
+    assert not rep.ok and rep.violations[0].rule == "suitability"
+
+
+def test_suitability_permite_elegivel_acentuado_nao_falso_positivo() -> None:
+    # Produto elegivel mencionado com acento nao deve disparar bloqueio.
+    gate = PolicyGate(rules=[SuitabilityRule(_CATALOGO_ACAO)])
+    rep = gate.check("O CDB Liquidez Diária é adequado.", allowed_products=["p_cdb_liq", "p_acoes"])
+    assert rep.ok

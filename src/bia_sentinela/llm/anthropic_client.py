@@ -39,12 +39,26 @@ class AnthropicLLM:
         self._model = model
         self._max_tokens = max_tokens
         self._max_retries = max_retries
-        # id da tool_call -> {name, input}; alimentado a cada resposta com tools.
+        # id da tool_call -> {name, input}; VIDA POR TURNO (ver _reset_memory_if_new_turn).
         self._tool_use_memory: dict[str, dict[str, Any]] = {}
+
+    def _reset_memory_if_new_turn(self, messages: list[Message]) -> None:
+        """Zera a memoria de tool_calls na 1a chamada de um turno.
+
+        Populada em `_parse`, lida em `_build_messages` das chamadas SEGUINTES do
+        MESMO turno. A 1a chamada de um turno nao traz mensagem role="tool";
+        resetar ali impede acumulo e colisao de ids entre turnos — o harness e
+        cacheado via `st.cache_resource`, compartilhado entre sessoes. Limitacao
+        residual: nao protege contra turnos concorrentes no mesmo objeto cacheado;
+        o fix robusto e tornar a reconstrucao stateless (ver CHANGELOG).
+        """
+        if not any(m.role == "tool" for m in messages):
+            self._tool_use_memory = {}
 
     def complete(self, messages, *, system=None, tools=None) -> LLMResponse:  # noqa: ANN001
         import anthropic  # noqa: PLC0415
 
+        self._reset_memory_if_new_turn(messages)
         payload: dict[str, Any] = {
             "model": self._model,
             "max_tokens": self._max_tokens,

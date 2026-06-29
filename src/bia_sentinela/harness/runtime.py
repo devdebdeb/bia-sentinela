@@ -147,7 +147,9 @@ class AgentHarness:
         try:
             insight = self._tools.execute(name, args)
             ctx.record_tool(ToolCallRecord(name=name, ok=True, latency_ms=round(now_ms() - t, 1)))
-            ctx.logger.info("tool_ok", tool=name, numeros=insight.numeros)
+            # Loga so a contagem: valores financeiros nao vao em claro para o log
+            # (minimizacao de dado; valores ainda fluem ao usuario via Insight).
+            ctx.logger.info("tool_ok", tool=name, n_numeros=len(insight.numeros))
             return insight
         except ToolError as exc:
             ctx.record_tool(
