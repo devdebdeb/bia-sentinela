@@ -91,7 +91,7 @@ python -m bia_sentinela.eval.run_eval \
 **Gate offline (FakeLLM + ferramentas reais) — validação do mecanismo:**
 
 ```
-casos: 46   groundedness 100%   refusal 100%   redteam 100%   benign 100%   GATE: PASSOU
+casos: 48   groundedness 100%   refusal 100%   redteam 100%   benign 100%   GATE: PASSOU
 ```
 
 **Modelo real (qwen2.5:32b local) — validação de qualidade com guardrail ativo:**
